@@ -1,16 +1,22 @@
 import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter } from "#prometheus";
+import Redis from 'ioredis';
 // import axios from "axios";
 import { Agent } from 'undici';
+import { parse } from "path";
 
 type Task = {
-  resolve: (task: Task) => void;
+  resolve: () => void;
   req: Request;
   res: Response;
-  arrivalTime: number;
   next: NextFunction;
 };
+
+const publisher = new Redis({
+  host:  process.env.REDIS_HOST || 'redis',
+  port: 6379,
+});
 
 ///PROM METRICS///
 const max_queue_size = parseInt(process.env.MAX_SIZE || "50");
@@ -38,14 +44,14 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     res.sendStatus(500);
     return;
   }
-  const arrivalTime = Date.now(); 
   const ready = new Promise<Task>((resolve) => {
-    const task: Task = {req, res, next, arrivalTime, resolve: (task) => resolve(task), };
+    const task: Task = {req, res, next, resolve: () => resolve(task)};
     requestQueue.push(task);
   });
-  ready.then(async (task) => {
+
+  ready.then(() => {
     next();
-    logic(task);
+    if (serviceName == "parser") parser_logic();
   });
   res.sendStatus(200);
 }
@@ -56,13 +62,13 @@ const port = process.env.PORT ?? "9001";
 app.get("/metrics", prometheusMetrics);
 app.post("/request", rateLimitMiddleware);
 
-const logic = async (task: Task) => {
+const parser_logic = async () => {
   // Insert here the specific logic of the service 
 };
 
 setInterval(() => {
   const task = requestQueue.shift();
-  if (task) task.resolve(task);
+  if (task) task.resolve();
 }, 1000 / mcl);
 
 const server = app.listen(port, () => {
