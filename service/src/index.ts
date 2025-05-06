@@ -2,9 +2,9 @@ import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter } from "#prometheus";
 import Redis from 'ioredis';
-// import axios from "axios";
 import { Agent } from 'undici';
 import { Task } from "#logic/logic.js";
+import {uuid as v4} from "uuidv4";
 
 
 const publisher = new Redis({
@@ -38,7 +38,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     res.sendStatus(500);
     return;
   }
-  const ready = new Promise<Task>((resolve) => {
+  const ready = new Promise<void>((resolve) => {
     const task: Task = {req, res, next, resolve: () => resolve()};
     requestQueue.push(task);
   });
@@ -56,8 +56,8 @@ const port = process.env.PORT ?? "9001";
 app.get("/metrics", prometheusMetrics);
 app.post("/request", rateLimitMiddleware);
 
-const parser_logic = async () => {
-  // Insert here the specific logic of the service 
+const parser_logic = () => {
+
 };
 
 setInterval(() => {
