@@ -4,14 +4,8 @@ import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCount
 import Redis from 'ioredis';
 // import axios from "axios";
 import { Agent } from 'undici';
-import { parse } from "path";
+import { Task } from "#logic/logic.js";
 
-type Task = {
-  resolve: () => void;
-  req: Request;
-  res: Response;
-  next: NextFunction;
-};
 
 const publisher = new Redis({
   host:  process.env.REDIS_HOST || 'redis',
