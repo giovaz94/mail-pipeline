@@ -3,14 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter } from "#prometheus";
 // import axios from "axios";
 import { Agent } from 'undici';
+import { Task } from "#logic/logic.js";
 
-type Task = {
-  resolve: (task: Task) => void;
-  req: Request;
-  res: Response;
-  arrivalTime: number;
-  next: NextFunction;
-};
 
 ///PROM METRICS///
 const max_queue_size = parseInt(process.env.MAX_SIZE || "50");
