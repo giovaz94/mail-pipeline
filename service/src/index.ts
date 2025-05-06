@@ -39,7 +39,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     return;
   }
   const ready = new Promise<Task>((resolve) => {
-    const task: Task = {req, res, next, resolve: () => resolve(task)};
+    const task: Task = {req, res, next, resolve: () => resolve()};
     requestQueue.push(task);
   });
 
