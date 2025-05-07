@@ -41,14 +41,8 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     console.log("----message loss----");
     if (serviceName === "parser") globalLostMessage.inc();
     else {
-      publisher.del(msg.data, (err, deletedCount) => {
-        if (err) {
-          console.error('Error deleting key:', err);
-          return;
-        }
-        if (deletedCount > 0) {
-          globalLostMessage.inc();
-        }
+      publisher.del(msg.data).then(res => {
+        if (res > 0) globalLostMessage.inc();
       });
     }
     lostMessage.inc(); 
