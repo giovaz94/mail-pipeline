@@ -2,7 +2,7 @@ import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter } from "#prometheus";
 import Redis from 'ioredis';
-import { Agent } from 'undici';
+import { request, Agent } from 'undici';
 import { Task } from "#logic/logic.js";
 import {uuid as v4} from "uuidv4";
 
@@ -19,6 +19,7 @@ const pipeline_count = parseInt(process.env.PIPELINE_COUNT || "0");
 const serviceName: string = process.env.SERVICE_NAME || "undefinedService";
 const lostMessage = createLostMessageCounter(serviceName);
 const incomingMessages = createIncomingMessageCounter(serviceName);
+
 const agent = new Agent({
   connections: max_connections,      // Increase connections
   pipelining: pipeline_count,         // Keep pipelining off if server doesn't support it
@@ -57,18 +58,45 @@ app.get("/metrics", prometheusMetrics);
 app.post("/request", rateLimitMiddleware);
 
 const parser_logic = () => {
+  const virusScanner = process.env.VIRUS_SCANNER;
+  const headerAnalyzer = process.env.HEADER_ANALYZER;
+  const linkAnalyzer = process.env.LINK_ANALYZER;
+  const textAnalyzer = process.env.TEXT_ANALYZER;
+  const messageAnalyzer = process.env.MESSAGE_ANALYZER;
   const id = v4();
   const n_attach = Math.floor(Math.random() * 5);
   const createDate: Date =  new Date();
   console.log(id + " has " + n_attach + " attachments");
   const msg = {data: id, time: createDate.toISOString()};
-  if(n_attach == 0) console.log("send to message analyzer");
-  else {
-    console.log("send to virus scanner");
-    publisher.set(id, 3 + n_attach);
+  publisher.set(id, 3 + n_attach);
+  if(n_attach > 0) {
+    for (let i = 0; i < n_attach; i++) { 
+      request(virusScanner, {
+        method: 'POST',
+        body: JSON.stringify(msg),
+        headers: {'Content-Type': 'application/json'},
+        dispatcher: agent
+      });
+    }
   }
-  
-
+  request(headerAnalyzer, {
+    method: 'POST',
+    body: JSON.stringify(msg),
+    headers: {'Content-Type': 'application/json'},
+    dispatcher: agent
+  });
+  request(linkAnalyzer, {
+    method: 'POST',
+    body: JSON.stringify(msg),
+    headers: {'Content-Type': 'application/json'},
+    dispatcher: agent
+  });
+  request(textAnalyzer, {
+    method: 'POST',
+    body: JSON.stringify(msg),
+    headers: {'Content-Type': 'application/json'},
+    dispatcher: agent
+  });
 };
 
 setInterval(() => {
