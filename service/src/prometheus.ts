@@ -63,20 +63,20 @@ export function createQueueLostMessageCounter(): Counter<string> {
   return counter;
 }
 
-export function createBehaviourCounter(): Counter<string> {
+export function createCompleteCounter(): Counter<string> {
   const counter = createCounter(
-    "behaviour_execution",
-    "Total number of behaviour execution",
+    "'http_requests_total_global",
+    "Total number of messages completed",
     ["service", "reason"],
   );
   counter.inc();
   return counter;
 }
 
-export function createBehaviourTimeCounter(): Counter<string> {
+export function createTimeCounter(): Counter<string> {
    const counter = createCounter(
-    "behaviour_time_execution",
-    "Time needed to execute the behaviour",
+    "http_requests_total_time",
+    "Time needed to analyse a message",
     ["service", "reason"],
   );
   counter.inc();

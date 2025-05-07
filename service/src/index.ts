@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response, NextFunction } from 'express';
-import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter } from "#prometheus";
+import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter, createCompleteCounter, createTimeCounter} from "#prometheus";
 import Redis from 'ioredis';
 import { request, Agent } from 'undici';
 import { Task } from "#logic/logic.js";
@@ -18,7 +18,10 @@ const max_connections = parseInt(process.env.MAX_CONNECTIONS || "40");
 const pipeline_count = parseInt(process.env.PIPELINE_COUNT || "0");
 const serviceName: string = process.env.SERVICE_NAME || "undefinedService";
 const lostMessage = createLostMessageCounter(serviceName);
+const globalLostMessage = createLostMessageCounter("global");
 const incomingMessages = createIncomingMessageCounter(serviceName);
+const completedMessages = createCompleteCounter();
+const requestsTotalTime = createTimeCounter();
 
 const agent = new Agent({
   connections: max_connections,      // Increase connections
@@ -32,9 +35,22 @@ const requestQueue: Task[] = [];
 
 function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   console.log("Req received");
+  const msg = req.body;
   incomingMessages.inc();
   if (requestQueue.length >= max_queue_size) {
     console.log("----message loss----");
+    if (serviceName === "parser") globalLostMessage.inc();
+    else {
+      publisher.del(msg.data, (err, deletedCount) => {
+        if (err) {
+          console.error('Error deleting key:', err);
+          return;
+        }
+        if (deletedCount > 0) {
+          globalLostMessage.inc();
+        }
+      });
+    }
     lostMessage.inc(); 
     res.sendStatus(500);
     return;
@@ -46,7 +62,10 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
 
   ready.then(() => {
     next();
-    if (serviceName == "parser") parser_logic();
+    if (serviceName === "parser") parser_logic();
+    if (serviceName === "virusScanner") virus_scanner_logic(msg);
+    if (serviceName === "attachment-manager" || serviceName === "image-analyzer" || serviceName === "header-analyzer" || serviceName === "text-analyzer" || serviceName === "link-analyzer") common_logic(msg);
+    if (serviceName === "message-analyzer") message_analyzer_logic(msg);
   });
   res.sendStatus(200);
 }
@@ -58,11 +77,10 @@ app.get("/metrics", prometheusMetrics);
 app.post("/request", rateLimitMiddleware);
 
 const parser_logic = () => {
-  const virusScanner = process.env.VIRUS_SCANNER;
-  const headerAnalyzer = process.env.HEADER_ANALYZER;
-  const linkAnalyzer = process.env.LINK_ANALYZER;
-  const textAnalyzer = process.env.TEXT_ANALYZER;
-  const messageAnalyzer = process.env.MESSAGE_ANALYZER;
+  const virusScanner = process.env.VIRUS_SCANNER || "undefinedService";
+  const headerAnalyzer = process.env.HEADER_ANALYZER || "undefinedService";
+  const linkAnalyzer = process.env.LINK_ANALYZER || "undefinedService";
+  const textAnalyzer = process.env.TEXT_ANALYZER || "undefinedService";
   const id = v4();
   const n_attach = Math.floor(Math.random() * 5);
   const createDate: Date =  new Date();
@@ -99,9 +117,48 @@ const parser_logic = () => {
   });
 };
 
+const virus_scanner_logic = (msg: any) => {
+  const isVirus = Math.floor(Math.random() * 4) === 0;
+  if (isVirus) console.log(msg.data + " has virus");
+  else console.log(msg.data + ' is virus free');
+  const target = isVirus ? process.env.MESSAGE_ANALYZER || "undefinedService" : process.env.ATTACHMENT_MANAGER || "undefinedService";
+  request(target, {
+    method: 'POST',
+    body: JSON.stringify(msg),
+    headers: {'Content-Type': 'application/json'},
+    dispatcher: agent
+  });
+}
+
+const common_logic = (msg: any) => {
+  let target;
+  if (serviceName === "attachment-manager") target = process.env.IMAGE_ANALYZER || "undefinedService";
+  else target =  process.env.MESSAGE_ANALYZER || "undefinedService";
+  request(target, {
+    method: 'POST',
+    body: JSON.stringify(msg),
+    headers: {'Content-Type': 'application/json'},
+    dispatcher: agent
+  });
+}
+
+const message_analyzer_logic = (msg: any) => {
+  publisher.decr(msg.data).then(res => {
+    if (res === 0) {
+      const now = new Date();
+      completedMessages.inc();
+      const time = new Date(msg.time);
+      const diff = now.getTime() - time.getTime();
+      console.log(msg.data + " completed in " + diff);
+      requestsTotalTime.inc(diff);
+      publisher.del(msg.data);
+    }
+  });
+}
+
 setInterval(() => {
   const task = requestQueue.shift();
-  if (task) task.resolve();
+  task?.resolve();
 }, 1000 / mcl);
 
 const server = app.listen(port, () => {
