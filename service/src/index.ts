@@ -57,6 +57,17 @@ app.get("/metrics", prometheusMetrics);
 app.post("/request", rateLimitMiddleware);
 
 const parser_logic = () => {
+  const id = v4();
+  const n_attach = Math.floor(Math.random() * 5);
+  const createDate: Date =  new Date();
+  console.log(id + " has " + n_attach + " attachments");
+  const msg = {data: id, time: createDate.toISOString()};
+  if(n_attach == 0) console.log("send to message analyzer");
+  else {
+    console.log("send to virus scanner");
+    publisher.set(id, 3 + n_attach);
+  }
+  
 
 };
 
