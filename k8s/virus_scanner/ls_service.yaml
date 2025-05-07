@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ls-algorithm-virus-scanner
+spec:
+  selector:
+    matchLabels:
+      app: ls-algorithm-virus-scanner
+  template:
+    metadata:
+      labels:
+        app: ls-algorithm-virus-scanner
+    spec:
+      serviceAccountName: scaler-service-account
+      containers:
+        - name: ls-algorithm
+          image: giovaz94/tea-store-ls
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7001
+          env:
+            - name: SLEEP_TIME
+              value: "10"
+            - name: COMPONENT_MCL
+              value: "190"
+            - name: COMPONENT_MF
+              value: "1"
+            - name: K_BIG
+              value: "10"
+            - name: K
+              value: "5"
+            - name: IN_CLUSTER
+              value: "true"
+            - name: PROMETHEUS_SERVICE_ADDRESS
+              value: "prometheus-service.monitoring.svc.cluster.local"
+            - name: PROMETHEUS_SERVICE_PORT
+              value: "8080"
+            - name: MANIFEST_NAME
+              value: "virus-scanner"
+            - name: METRIC_NAME
+              value: "http_requests_total_virus-scanner_counter"
+            - name: SERVICE_PORT
+              value: "7001"
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ls-algorithm-virus-scanner-service
+spec:
+  selector:
+    app: ls-algorithm-virus-scanner
+  ports:
+    - protocol: TCP
+      port: 7001
+      targetPort: 7001

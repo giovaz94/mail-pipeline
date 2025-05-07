@@ -33,6 +33,20 @@ if (process.env.MCL === undefined) throw new Error("The MCL for the following se
 const mcl: number = parseInt(process.env.MCL as string, 10);
 const requestQueue: Task[] = [];
 
+async function fireAndForget(msg, url) {
+  try {
+    const res = await request(url, {
+      method: 'POST',
+      body: JSON.stringify(msg),
+      headers: {'Content-Type': 'application/json'},
+      dispatcher: agent
+    });
+    res.body.resume();
+  } catch(err) {
+    console.error('Fire-and-forget request failed:', err);
+  }
+}
+
 function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   console.log("Req received");
   const msg = req.body;
@@ -58,7 +72,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     next();
     if (serviceName === "parser") parser_logic();
     if (serviceName === "virusScanner") virus_scanner_logic(msg);
-    if (serviceName === "attachment-manager" || serviceName === "image-analyzer" || serviceName === "header-analyzer" || serviceName === "text-analyzer" || serviceName === "link-analyzer") common_logic(msg);
+    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(msg);
     if (serviceName === "message-analyzer") message_analyzer_logic(msg);
   });
   res.sendStatus(200);
@@ -68,7 +82,8 @@ const app = express();
 const port = process.env.PORT ?? "9001";
 
 app.get("/metrics", prometheusMetrics);
-app.post("/request", rateLimitMiddleware);
+if (mcl > 0) app.post("/request", rateLimitMiddleware);
+else app.post("/request", (req: Request, res: Response) => common_logic(req.body));
 
 const parser_logic = () => {
   const virusScanner = process.env.VIRUS_SCANNER || "undefinedService";
@@ -83,32 +98,12 @@ const parser_logic = () => {
   publisher.set(id, 3 + n_attach);
   if(n_attach > 0) {
     for (let i = 0; i < n_attach; i++) { 
-      request(virusScanner, {
-        method: 'POST',
-        body: JSON.stringify(msg),
-        headers: {'Content-Type': 'application/json'},
-        dispatcher: agent
-      });
+      fireAndForget(msg, virusScanner);
     }
   }
-  request(headerAnalyzer, {
-    method: 'POST',
-    body: JSON.stringify(msg),
-    headers: {'Content-Type': 'application/json'},
-    dispatcher: agent
-  });
-  request(linkAnalyzer, {
-    method: 'POST',
-    body: JSON.stringify(msg),
-    headers: {'Content-Type': 'application/json'},
-    dispatcher: agent
-  });
-  request(textAnalyzer, {
-    method: 'POST',
-    body: JSON.stringify(msg),
-    headers: {'Content-Type': 'application/json'},
-    dispatcher: agent
-  });
+  fireAndForget(msg, headerAnalyzer);
+  fireAndForget(msg, linkAnalyzer);
+  fireAndForget(msg, textAnalyzer);
 };
 
 const virus_scanner_logic = (msg: any) => {
@@ -116,24 +111,14 @@ const virus_scanner_logic = (msg: any) => {
   if (isVirus) console.log(msg.data + " has virus");
   else console.log(msg.data + ' is virus free');
   const target = isVirus ? process.env.MESSAGE_ANALYZER || "undefinedService" : process.env.ATTACHMENT_MANAGER || "undefinedService";
-  request(target, {
-    method: 'POST',
-    body: JSON.stringify(msg),
-    headers: {'Content-Type': 'application/json'},
-    dispatcher: agent
-  });
+  fireAndForget(msg, target);
 }
 
 const common_logic = (msg: any) => {
   let target;
   if (serviceName === "attachment-manager") target = process.env.IMAGE_ANALYZER || "undefinedService";
   else target =  process.env.MESSAGE_ANALYZER || "undefinedService";
-  request(target, {
-    method: 'POST',
-    body: JSON.stringify(msg),
-    headers: {'Content-Type': 'application/json'},
-    dispatcher: agent
-  });
+  fireAndForget(msg, target);
 }
 
 const message_analyzer_logic = (msg: any) => {
@@ -150,10 +135,13 @@ const message_analyzer_logic = (msg: any) => {
   });
 }
 
-setInterval(() => {
-  const task = requestQueue.shift();
-  task?.resolve();
-}, 1000 / mcl);
+if (mcl > 0) {
+  setInterval(() => {
+    const task = requestQueue.shift();
+    task?.resolve();
+  }, 1000 / mcl);
+}
+
 
 const server = app.listen(port, () => {
   server.keepAliveTimeout = 65000; // 65 seconds (AWS ALB default)
