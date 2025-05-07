@@ -20,7 +20,7 @@ spec:
             - containerPort: 80
           env:
             - name: MCL
-              value: "120"
+              value: "231"
             - name: REDIS_HOST
               value: "redis-service"
             - name: SERVICE_NAME

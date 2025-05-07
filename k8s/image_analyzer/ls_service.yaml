@@ -22,10 +22,10 @@ spec:
           env:
             - name: SLEEP_TIME
               value: "10"
-            - name: COMPONENT_MCL
-              value: "190"
+            - name: MCL
+              value: "231"
             - name: COMPONENT_MF
-              value: "1"
+              value: "1.5"
             - name: K_BIG
               value: "10"
             - name: K
