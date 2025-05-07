@@ -33,7 +33,7 @@ if (process.env.MCL === undefined) throw new Error("The MCL for the following se
 const mcl: number = parseInt(process.env.MCL as string, 10);
 const requestQueue: Task[] = [];
 
-async function fireAndForget(msg, url) {
+async function fireAndForget(msg: any, url: string) {
   try {
     const res = await request(url, {
       method: 'POST',
