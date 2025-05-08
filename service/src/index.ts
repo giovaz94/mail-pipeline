@@ -71,7 +71,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   ready.then(() => {
     next();
     if (serviceName === "parser") parser_logic();
-    if (serviceName === "virusScanner") virus_scanner_logic(msg);
+    if (serviceName === "virus-scanner") virus_scanner_logic(msg);
     if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(msg);
     if (serviceName === "message-analyzer") message_analyzer_logic(msg);
   });
