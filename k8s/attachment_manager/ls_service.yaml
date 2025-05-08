@@ -39,7 +39,7 @@ spec:
             - name: MANIFEST_NAME
               value: "attachment-manager"
             - name: METRIC_NAME
-              value: "http_requests_total_attachment-manager_counter"
+              value: "http_requests_total_attachment_manager_counter"
             - name: SERVICE_PORT
               value: "7001"
             

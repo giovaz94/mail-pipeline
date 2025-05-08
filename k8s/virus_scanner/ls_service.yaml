@@ -39,7 +39,7 @@ spec:
             - name: MANIFEST_NAME
               value: "virus-scanner"
             - name: METRIC_NAME
-              value: "http_requests_total_virus-scanner_counter"
+              value: "http_requests_total_virus_scanner_counter"
             - name: SERVICE_PORT
               value: "7001"
             

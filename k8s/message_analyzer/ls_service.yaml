@@ -39,7 +39,7 @@ spec:
             - name: MANIFEST_NAME
               value: "message-analyzer"
             - name: METRIC_NAME
-              value: "http_requests_total_message-analyzer_counter"
+              value: "http_requests_total_message_analyzer_counter"
             - name: SERVICE_PORT
               value: "7001"
             

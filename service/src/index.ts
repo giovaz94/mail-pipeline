@@ -111,6 +111,7 @@ const virus_scanner_logic = (msg: any) => {
   if (isVirus) console.log(msg.data + " has virus");
   else console.log(msg.data + ' is virus free');
   const target = isVirus ? process.env.MESSAGE_ANALYZER || "undefinedService" : process.env.ATTACHMENT_MANAGER || "undefinedService";
+  console.log(`Sending to ${target}`)
   fireAndForget(msg, target);
 }
 
@@ -118,6 +119,7 @@ const common_logic = (msg: any) => {
   let target;
   if (serviceName === "attachment-manager") target = process.env.IMAGE_ANALYZER || "undefinedService";
   else target =  process.env.MESSAGE_ANALYZER || "undefinedService";
+  console.log(`sending message to ${target}`);
   fireAndForget(msg, target);
 }
 

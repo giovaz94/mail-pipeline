@@ -39,7 +39,7 @@ spec:
             - name: MANIFEST_NAME
               value: "image-analyzer"
             - name: METRIC_NAME
-              value: "http_requests_total_image-analyzer_counter"
+              value: "http_requests_total_image_analyzer_counter"
             - name: SERVICE_PORT
               value: "7001"
             
