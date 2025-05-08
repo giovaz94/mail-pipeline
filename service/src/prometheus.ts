@@ -3,6 +3,14 @@ import { Counter, Registry } from "prom-client";
 
 const register = new Registry();
 
+function toValidIdentifier(input: string): string {
+  let cleaned = input.replace(/[^a-zA-Z0-9_:]/g, '_');
+  if (!/^[a-zA-Z_:]/.test(cleaned)) {
+    cleaned = '_' + cleaned;
+  }
+
+  return cleaned;
+}
 
 export const prometheusMetrics: RequestHandler = async (req: any, res: any) => {
   res.set("Content-Type", register.contentType);
@@ -14,26 +22,15 @@ export function createCounter(
   help: string,
   labelNames: string[] = [],
 ): Counter<string> {
+  const cleaned: string = toValidIdentifier(name);
   const counter = new Counter({
-    name,
+    name: cleaned,
     help,
     labelNames,
     registers: [register],
   });
 
   return counter;
-}
-
-function toValidIdentifier(input: string): string {
-  // Replace invalid characters with underscores (excluding the first character)
-  let cleaned = input.replace(/[^a-zA-Z0-9_:]/g, '_');
-
-  // If the first character is not a letter, underscore, or colon, prefix with '_'
-  if (!/^[a-zA-Z_:]/.test(cleaned)) {
-    cleaned = '_' + cleaned;
-  }
-
-  return cleaned;
 }
 
 export function createSimpleCounter(
