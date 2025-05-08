@@ -97,7 +97,8 @@ const parser_logic = () => {
   const msg = {data: id, time: createDate.toISOString()};
   publisher.set(id, 3 + n_attach);
   if(n_attach > 0) {
-    for (let i = 0; i < n_attach; i++) { 
+    for (let i = 0; i < n_attach; i++) {
+      console.log(`Sending to virus-scanner at ${virusScanner}`) 
       fireAndForget(msg, virusScanner);
     }
   }
