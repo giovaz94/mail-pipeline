@@ -24,11 +24,24 @@ export function createCounter(
   return counter;
 }
 
+function toValidIdentifier(input: string): string {
+  // Replace invalid characters with underscores (excluding the first character)
+  let cleaned = input.replace(/[^a-zA-Z0-9_:]/g, '_');
+
+  // If the first character is not a letter, underscore, or colon, prefix with '_'
+  if (!/^[a-zA-Z_:]/.test(cleaned)) {
+    cleaned = '_' + cleaned;
+  }
+
+  return cleaned;
+}
+
 export function createSimpleCounter(
   name: string,
   help: string,
 ): Counter<string> {
-  return createCounter(name, help);
+
+  return createCounter(toValidIdentifier(name), help);
 }
 
 export function createIncomingMessageCounter(
@@ -43,19 +56,9 @@ export function createIncomingMessageCounter(
   return counter;
 }
 
-export function createLostMessageCounter(): Counter<string> {
+export function createLostMessageCounter(serviceName: string): Counter<string> {
   const counter = createCounter(
-    `message_lost`,
-    "Total number of messages that failed to be delivered",
-    ["service", "reason"],
-  );
-  counter.inc();
-  return counter;
-}
-
-export function createGlobalLostMessageCounter(): Counter<string> {
-  const counter = createCounter(
-    `message_lost_global`,
+    `message_lost_${serviceName}_counter`,
     "Total number of messages that failed to be delivered",
     ["service", "reason"],
   );

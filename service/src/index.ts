@@ -1,13 +1,6 @@
 import express from "express";
 import { Request, Response, NextFunction } from 'express';
-import { 
-  prometheusMetrics, 
-  createIncomingMessageCounter, 
-  createLostMessageCounter, 
-  createGlobalLostMessageCounter, 
-  createCompleteCounter, 
-  createTimeCounter
-} from "#prometheus";
+import { prometheusMetrics, createIncomingMessageCounter, createLostMessageCounter, createCompleteCounter, createTimeCounter} from "#prometheus";
 import Redis from 'ioredis';
 import { request, Agent } from 'undici';
 import { Task } from "#logic/logic.js";
@@ -24,8 +17,8 @@ const max_queue_size = parseInt(process.env.MAX_SIZE || "50");
 const max_connections = parseInt(process.env.MAX_CONNECTIONS || "40");
 const pipeline_count = parseInt(process.env.PIPELINE_COUNT || "0");
 const serviceName: string = process.env.SERVICE_NAME || "undefinedService";
-const lostMessage = createLostMessageCounter();
-const globalLostMessage = createGlobalLostMessageCounter();
+const lostMessage = createLostMessageCounter(serviceName);
+const globalLostMessage = createLostMessageCounter("global");
 const incomingMessages = createIncomingMessageCounter(serviceName);
 const completedMessages = createCompleteCounter();
 const requestsTotalTime = createTimeCounter();
