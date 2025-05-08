@@ -43,9 +43,19 @@ export function createIncomingMessageCounter(
   return counter;
 }
 
-export function createLostMessageCounter(serviceName: string): Counter<string> {
+export function createLostMessageCounter(): Counter<string> {
   const counter = createCounter(
-    `message_lost_${serviceName}`,
+    `message_lost`,
+    "Total number of messages that failed to be delivered",
+    ["service", "reason"],
+  );
+  counter.inc();
+  return counter;
+}
+
+export function createGlobalLostMessageCounter(): Counter<string> {
+  const counter = createCounter(
+    `message_lost_global`,
     "Total number of messages that failed to be delivered",
     ["service", "reason"],
   );

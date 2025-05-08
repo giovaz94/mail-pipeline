@@ -139,40 +139,49 @@ deploy_services_only() {
 undeploy_all() {
   echo -e "${YELLOW}Undeploying all components...${NC}"
 
-  echo -e "${GREEN}Removing cronJob...${NC}"
-  kubectl delete -f "$K8S_DIR/job" && check_error
-
+  echo -e "${GREEN}Removing virus-scanner...${NC}"
+  kubectl delete -f "$K8S_DIR/virus_scanner" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/virus_scanner/virus-scanner.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing message-analyzer...${NC}"
+  kubectl delete -f "$K8S_DIR/message_analyzer" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/message_analyzer/message-analyzer.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing image-analyzer...${NC}"
+  kubectl delete -f "$K8S_DIR/image_analyzer" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/image_analyzer/image-analyzer.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing text-analyzer...${NC}"
+  kubectl delete -f "$K8S_DIR/text_analyzer" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/text_analyzer/text-analyzer.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing link-analyzer...${NC}"
+  kubectl delete -f "$K8S_DIR/link_analyzer" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/link_analyzer/link-analyzer.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing attachment-manager...${NC}"
+  kubectl delete -f "$K8S_DIR/attachment_manager" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/attachment_manager/attachment-manager.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing header-analyzer...${NC}"
+  kubectl delete -f "$K8S_DIR/header_analyzer" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/header_analyzer/header-analyzer.yaml" --ignore-not-found=true
+  
+  echo -e "${GREEN}Removing parser...${NC}"
+  kubectl delete -f "$K8S_DIR/parser" --ignore-not-found=true
+  kubectl delete -f "$K8S_DIR/parser/parser.yaml" --ignore-not-found=true
+  
   echo -e "${GREEN}Removing entrypoint...${NC}"
   kubectl delete -f "$K8S_DIR/entrypoint" --ignore-not-found=true
-  
-  echo -e "${GREEN}Removing webUI...${NC}"
-  kubectl delete -f "$K8S_DIR/webUI" --ignore-not-found=true
-  kubectl delete -f "$K8S_DIR/webUI/webUI.yaml" --ignore-not-found=true
-  
-  echo -e "${GREEN}Removing recommender...${NC}"
-  kubectl delete -f "$K8S_DIR/recommender" --ignore-not-found=true
-  kubectl delete -f "$K8S_DIR/recommender/recommender.yaml" --ignore-not-found=true
-  
-  echo -e "${GREEN}Removing persistence...${NC}"
-  kubectl delete -f "$K8S_DIR/persistence" --ignore-not-found=true
-  kubectl delete -f "$K8S_DIR/persistence/persistence.yaml" --ignore-not-found=true
   
   echo -e "${GREEN}Removing gs-algorithm...${NC}"
   kubectl delete -f "$K8S_DIR/gs-algorithm" --ignore-not-found=true
   
-  echo -e "${GREEN}Removing auth...${NC}"
-  kubectl delete -f "$K8S_DIR/auth" --ignore-not-found=true
-  kubectl delete -f "$K8S_DIR/auth/auth.yaml" --ignore-not-found=true
-
-  echo -e "${GREEN}Removing image...${NC}"
-  kubectl delete -f "$K8S_DIR/image" --ignore-not-found=true
-  kubectl delete -f "$K8S_DIR/image/image.yaml" --ignore-not-found=true
+  echo -e "${GREEN}Removing redis...${NC}"
+  kubectl delete -f "$K8S_DIR/redis" --ignore-not-found=true
   
   echo -e "${GREEN}Removing prometheus...${NC}"
   kubectl delete -f "$K8S_DIR/prometheus" --ignore-not-found=true
-
-  echo -e "${GREEN}Removing roles...${NC}"
-  kubectl delete -f "$K8S_DIR/roles" --ignore-not-found=true
   
   echo -e "${GREEN}All components successfully removed!${NC}"
 }
