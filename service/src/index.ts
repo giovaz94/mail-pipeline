@@ -50,6 +50,7 @@ async function fireAndForget(msg: any, url: string) {
 function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   console.log("Req received");
   const msg = req.body;
+  console.log(msg);
   incomingMessages.inc();
   if (requestQueue.length >= max_queue_size) {
     console.log("----message loss----");
