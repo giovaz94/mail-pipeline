@@ -50,7 +50,6 @@ async function fireAndForget(msg: any, url: string) {
 function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   console.log("Req received");
   const msg = req.body;
-  console.log(msg);
   incomingMessages.inc();
   if (requestQueue.length >= max_queue_size) {
     console.log("----message loss----");
@@ -109,7 +108,6 @@ const parser_logic = () => {
 };
 
 const virus_scanner_logic = (msg: any) => {
-  console.log(msg)
   const isVirus = Math.floor(Math.random() * 4) === 0;
   if (isVirus) console.log(msg.data + " has virus");
   else console.log(msg.data + ' is virus free');
