@@ -98,7 +98,6 @@ const parser_logic = () => {
   publisher.set(id, 3 + n_attach);
   if(n_attach > 0) {
     for (let i = 0; i < n_attach; i++) {
-      console.log(`Sending to virus-scanner at ${virusScanner}`) 
       fireAndForget(msg, virusScanner);
     }
   }
@@ -108,6 +107,7 @@ const parser_logic = () => {
 };
 
 const virus_scanner_logic = (msg: any) => {
+  console.log(msg)
   const isVirus = Math.floor(Math.random() * 4) === 0;
   if (isVirus) console.log(msg.data + " has virus");
   else console.log(msg.data + ' is virus free');
