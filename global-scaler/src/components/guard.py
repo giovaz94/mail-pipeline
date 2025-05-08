@@ -7,9 +7,7 @@ from prometheus_api_client import PrometheusConnect
 import numpy as np
 import requests
 
-
 class Guard:
-
     def __init__(
             self,
             scaler: SysScaler,
@@ -38,6 +36,7 @@ class Guard:
         self.proactiveness = os.environ.get("PROACTIVE", "false").lower() == 'true' #change to an env variable
         self.proactive_reactive = self.proactiveness and os.environ.get("PROACTIVE_REACTIVE", "false").lower() == 'true' 
         self.predictions = predictions
+        self.monitor_only = os.environ.get("MONITOR_ONLY", "false").lower() == 'true'
 
     def start(self) -> None:
         """
@@ -108,7 +107,8 @@ class Guard:
                 target_workload = pred_workload
             if self.proactiveness: toPrint += " next: " + str(pred_workload)
             toPrint += " measured: " + str(measured_workload)
-            config = self.scaler.get_current_config()
+            config = np.sum(self.scaler.get_current_config()) if not self.monitor_only else self._execute_prometheus_query("sum(total_instances_number)")
+            
             #proactivity + reactivity:
             if iter > 0 and self.proactive_reactive:
                 measured_conf = self.scaler.calculate_configuration(measured_workload + self.k_big)
@@ -118,7 +118,7 @@ class Guard:
             toPrint += " tot: " + str(measured_workload * self.sleep) + " comp: " + str(completed) + " rej: " + str(loss) + " supp: " + str(current_mcl) + " inst: " + str(3+np.sum(config))
             print(toPrint, flush=True)
 
-            if iter > 0 and self.should_scale(target_workload, current_mcl):
+            if iter > 0 and self.should_scale(target_workload, current_mcl) and not self.monitor_only :
                 target_conf = self.scaler.calculate_configuration(target_workload + self.k_big)
                 current_mcl, _ = self.scaler.process_request(target_conf)    
 

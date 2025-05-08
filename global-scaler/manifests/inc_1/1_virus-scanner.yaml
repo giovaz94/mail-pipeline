@@ -20,6 +20,3 @@ spec:
         value: "750"
       - name: BATCH
         value: "120"
-
-   
-    
