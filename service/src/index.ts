@@ -82,6 +82,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
 const app = express();
 const port = process.env.PORT ?? "9001";
 
+app.use(express.json()); 
 app.get("/metrics", prometheusMetrics);
 if (mcl > 0) app.post("/request", rateLimitMiddleware);
 else app.post("/request", (req: Request, res: Response) => common_logic(req.body));
