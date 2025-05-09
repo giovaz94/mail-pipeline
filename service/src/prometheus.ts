@@ -75,7 +75,7 @@ export function createQueueLostMessageCounter(): Counter<string> {
 
 export function createCompleteCounter(): Counter<string> {
   const counter = createCounter(
-    "'http_requests_total_global",
+    "http_requests_total_global",
     "Total number of messages completed",
     ["service", "reason"],
   );
