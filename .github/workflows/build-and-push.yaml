@@ -17,6 +17,9 @@ jobs:
           - dockerfile: ./global-scaler/Dockerfile
             context: ./global-scaler
             image: giovaz94/mail-pipeline-gs
+          - dockerfile: ./entrypoint/Dockerfile
+            context: ./entrypoint
+            image: giovaz94/mail-pipeline-ep
 
     permissions:
       contents: read

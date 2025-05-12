@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: entrypoint
-          image: giovaz94/tea-store-ep
+          image: giovaz94/mail-pipeline-ep
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -24,7 +24,7 @@ spec:
             - name: PORT
               value: "80"
             - name: ENDPOINT
-              value: "http://webui-service/request"
+              value: "http://parser-service/request"
       restartPolicy: Always
 ---
 apiVersion: v1
