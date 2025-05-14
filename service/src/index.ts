@@ -129,6 +129,7 @@ const message_analyzer_logic = (msg: any) => {
   publisher.decr(msg.data).then(res => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
     if (res === 0) {
+      console.log("Complted the message with id " + msg.data)
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
