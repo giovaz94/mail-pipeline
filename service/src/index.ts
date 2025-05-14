@@ -125,16 +125,36 @@ const common_logic = (msg: any) => {
 }
 
 const message_analyzer_logic = (msg: any) => {
-  publisher.decr(msg.data).then(res => {
-    console.log(`Message ${msg.data} has ${res} items to analyze`)
-    if (res == 0) {
+  const luaScript = `
+    local key = KEYS[1]
+    local count = redis.call('DECR', key)
+    if count <= 0 then
+      redis.call('DEL', key)
+    end
+    return count
+  `;
+
+  publisher.eval(luaScript, 1, msg.data).then((res) => {
+    let count: number;
+    
+    if (typeof res === 'string') {
+      count = parseInt(res, 10);
+    } else if (typeof res === 'number') {
+      count = res;
+    } else {
+      console.error('Unexpected result type from Redis:', res);
+      return; 
+    }
+    
+    console.log(`Message ${msg.data} has ${count} items to analyze`);
+    
+    if (count <= 0) {
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
       const diff = now.getTime() - time.getTime();
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
-      publisher.del(msg.data);
     }
   });
 }
