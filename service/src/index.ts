@@ -124,28 +124,19 @@ const common_logic = (msg: any) => {
   fireAndForget(msg, target);
 }
 
-const message_analyzer_logic = async (msg: any) => {
-  const script = `
-    local val = redis.call("DECR", KEYS[1])
-    if val == 0 then
-      redis.call("DEL", KEYS[1])
-    end
-    return val
-  `;
-
-  try {
-    const result = await publisher.eval(script, 1, msg.data);
-    if (result === 0) {
+const message_analyzer_logic = (msg: any) => {
+  publisher.decr(msg.data).then(res => {
+    console.log(`Message ${msg.data} has ${res} items to analyze`)
+    if (res == 0) {
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
       const diff = now.getTime() - time.getTime();
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
+      publisher.del(msg.data);
     }
-  } catch (err) {
-    console.error("Failed to evaluate Redis script:", err);
-  }
+  });
 }
 
 if (mcl > 0) {
