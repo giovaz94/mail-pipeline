@@ -20,7 +20,7 @@ spec:
             - containerPort: 80
           env:
             - name: MCL
-              value: "120"
+              value: "300"
             - name: REDIS_HOST
               value: "redis-service"
             - name: SERVICE_NAME
@@ -29,8 +29,6 @@ spec:
               value: "80"
             - name: MAX_SIZE
               value: "15000"
-            - name: MESSAGE_ANALYZER
-              value: "http://message-analyzer-service/request"
             - name: MAX_CONNECTIONS
               value: "70"
             - name: PIPELINE_COUNT

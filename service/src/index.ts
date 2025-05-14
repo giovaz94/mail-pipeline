@@ -128,10 +128,14 @@ const message_analyzer_logic = (msg: any) => {
   publisher.decr(msg.data).then(res => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
     if (res <= 0) {
+
+      console.log("time "  + msg.time);
+      console.log("id "  + msg.data);
+
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
-      const diff = now.getTime() - time.getTime();
+      const diff = now.getMilliseconds() - time.getMilliseconds();
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
       publisher.del(msg.data);
