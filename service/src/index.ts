@@ -125,6 +125,7 @@ const common_logic = (msg: any) => {
 }
 
 const message_analyzer_logic = (msg: any) => {
+  console.log(`processing message ${msg}`)
   publisher.decr(msg.data).then(res => {
     if (res === 0) {
       const now = new Date();

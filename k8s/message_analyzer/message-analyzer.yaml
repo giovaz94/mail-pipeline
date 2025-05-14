@@ -28,7 +28,7 @@ spec:
             - name: PORT
               value: "80"
             - name: MAX_SIZE
-              value: "1500000"
+              value: "15000"
             - name: MESSAGE_ANALYZER
               value: "http://message-analyzer-service/request"
             - name: MAX_CONNECTIONS

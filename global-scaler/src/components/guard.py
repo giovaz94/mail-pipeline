@@ -29,7 +29,7 @@ class Guard:
         self.mixer = mixer
 
         prometheus_service_address = os.environ.get("PROMETHEUS_SERVICE_ADDRESS", "localhost")
-        prometheus_service_port = os.environ.get("PROMETHEUS_SERVICE_PORT", "57905")
+        prometheus_service_port = os.environ.get("PROMETHEUS_SERVICE_PORT", "59305")
         prometheus_url = f"http://{prometheus_service_address}:{prometheus_service_port}"
         self.prometheus_instance = PrometheusConnect(url=prometheus_url)
 
@@ -90,7 +90,7 @@ class Guard:
             start = time.time()
         
             tot = self._execute_prometheus_query("sum(http_requests_total_parser_counter)")
-            completed = self._execute_prometheus_query("sum(increase(_http_requests_total_global[10s]))")
+            completed = self._execute_prometheus_query("sum(increase(http_requests_total_global[10s]))")
             latency = self._execute_prometheus_query("sum(increase(http_requests_total_time[10s]))")
             avg_lat = latency/(completed if completed > 0 else 1)
             loss = self._execute_prometheus_query("sum(increase(message_lost_global_counter[10s]))")
