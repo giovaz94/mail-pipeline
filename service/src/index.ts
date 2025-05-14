@@ -86,7 +86,7 @@ app.get("/metrics", prometheusMetrics);
 if (mcl > 0) app.post("/request", rateLimitMiddleware);
 else app.post("/request", (req: Request, res: Response) => common_logic(req.body));
 
-const parser_logic = () => {
+const parser_logic = async () => {
   const virusScanner = process.env.VIRUS_SCANNER || "undefinedService";
   const headerAnalyzer = process.env.HEADER_ANALYZER || "undefinedService";
   const linkAnalyzer = process.env.LINK_ANALYZER || "undefinedService";
@@ -96,7 +96,7 @@ const parser_logic = () => {
   const createDate: Date =  new Date();
   console.log(id + " has " + n_attach + " attachments");
   const msg = {data: id, time: createDate.toISOString()};
-  publisher.set(id, 3 + n_attach);
+  await publisher.set(id, 3 + n_attach);
   if(n_attach > 0) {
     for (let i = 0; i < n_attach; i++) {
       fireAndForget(msg, virusScanner);
@@ -125,36 +125,16 @@ const common_logic = (msg: any) => {
 }
 
 const message_analyzer_logic = (msg: any) => {
-  const luaScript = `
-    local key = KEYS[1]
-    local count = redis.call('DECR', key)
-    if count <= 0 then
-      redis.call('DEL', key)
-    end
-    return count
-  `;
-
-  publisher.eval(luaScript, 1, msg.data).then((res) => {
-    let count: number;
-    
-    if (typeof res === 'string') {
-      count = parseInt(res, 10);
-    } else if (typeof res === 'number') {
-      count = res;
-    } else {
-      console.error('Unexpected result type from Redis:', res);
-      return; 
-    }
-    
-    console.log(`Message ${msg.data} has ${count} items to analyze`);
-    
-    if (count <= 0) {
+  publisher.decr(msg.data).then(res => {
+    console.log(`Message ${msg.data} has ${res} items to analyze`)
+    if (res == 0) {
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
       const diff = now.getTime() - time.getTime();
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
+      publisher.del(msg.data);
     }
   });
 }
