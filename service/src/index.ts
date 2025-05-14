@@ -86,7 +86,7 @@ app.get("/metrics", prometheusMetrics);
 if (mcl > 0) app.post("/request", rateLimitMiddleware);
 else app.post("/request", (req: Request, res: Response) => common_logic(req.body));
 
-const parser_logic = () => {
+const parser_logic = async () => {
   const virusScanner = process.env.VIRUS_SCANNER || "undefinedService";
   const headerAnalyzer = process.env.HEADER_ANALYZER || "undefinedService";
   const linkAnalyzer = process.env.LINK_ANALYZER || "undefinedService";
@@ -96,7 +96,7 @@ const parser_logic = () => {
   const createDate: Date =  new Date();
   console.log(id + " has " + n_attach + " attachments");
   const msg = {data: id, time: createDate.toISOString()};
-  publisher.set(id, 3 + n_attach);
+  await publisher.set(id, 3 + n_attach);
   if(n_attach > 0) {
     for (let i = 0; i < n_attach; i++) {
       fireAndForget(msg, virusScanner);
