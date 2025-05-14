@@ -135,6 +135,11 @@ const message_analyzer_logic = (msg: any) => {
       const now = new Date();
       completedMessages.inc();
       const time = new Date(msg.time);
+
+      
+      console.log(time)
+      console.log(now)
+
       const diff = now.getMilliseconds() - time.getMilliseconds();
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
