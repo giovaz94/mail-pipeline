@@ -159,7 +159,7 @@ if (mcl > 0) {
 
 
 const server = app.listen(port, () => {
-  server.keepAliveTimeout = 65000; // 65 seconds (AWS ALB default)
-  server.headersTimeout = 66000;   // Must be > keepAliveTimeout
+  server.keepAliveTimeout = 5000; // 65 seconds (AWS ALB default)
+  server.headersTimeout = 6000;   // Must be > keepAliveTimeout
   console.log(`${serviceName} started and listening on port ${port}`);
 });
