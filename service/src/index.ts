@@ -41,7 +41,7 @@ async function fireAndForget(msg: any, url: string) {
       headers: {'Content-Type': 'application/json'},
       dispatcher: agent
     });
-    res.body.resume();
+    //res.body.resume();
   } catch(err) {
     console.error('Fire-and-forget request failed:', err);
   }
@@ -143,7 +143,7 @@ const message_analyzer_logic = (msg: any) => {
 if (mcl > 0) {
   setInterval(() => {
     const task = requestQueue.shift();
-    task?.resolve(task.req);
+    task?.resolve(task.req.body);
   }, 1000 / mcl);
 }
 
