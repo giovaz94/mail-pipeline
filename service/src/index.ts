@@ -63,17 +63,17 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     res.sendStatus(500);
     return;
   }
-  const ready = new Promise<Request>((resolve) => {
-    const task: Task = {req, res, next, resolve: (req: Request) => resolve(req)};
+  const ready = new Promise<any>((resolve) => {
+    const task: Task = {req, res, next, resolve: (body: any) => resolve(body)};
     requestQueue.push(task);
   });
 
-  ready.then((req) => {
+  ready.then((body) => {
     next();
     if (serviceName === "parser") parser_logic();
-    if (serviceName === "virus-scanner") virus_scanner_logic(req.body);
-    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(req.body);
-    if (serviceName === "message-analyzer") message_analyzer_logic(req.body);
+    if (serviceName === "virus-scanner") virus_scanner_logic(body);
+    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(body);
+    if (serviceName === "message-analyzer") message_analyzer_logic(body);
   });
   res.sendStatus(200);
 }
@@ -128,9 +128,9 @@ const common_logic = (msg: any) => {
 const message_analyzer_logic = (msg: any) => {
   publisher.decr(msg.data).then(res => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
-    if (res === 0) {
-      const now = new Date();
+    if (res <= 0) {
       completedMessages.inc();
+      const now = new Date();
       const time = new Date(msg.time);
       const diff = now.getTime() - time.getTime();
       console.log(msg.data + " completed in " + diff);
