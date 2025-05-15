@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { request, Agent } from 'undici';
 import { Task } from "#logic/logic.js";
 import {uuid as v4} from "uuidv4";
+import { Counter } from "prom-client";
 
 
 const publisher = new Redis({
@@ -20,8 +21,17 @@ const serviceName: string = process.env.SERVICE_NAME || "undefinedService";
 const lostMessage = createLostMessageCounter(serviceName);
 const globalLostMessage = createLostMessageCounter("global");
 const incomingMessages = createIncomingMessageCounter(serviceName);
-const completedMessages = createCompleteCounter();
-const requestsTotalTime = createTimeCounter();
+
+
+let completedMessages: Counter<string>
+let requestsTotalTime: Counter<string>
+
+if (serviceName === "message-analyzer") {
+  completedMessages = createCompleteCounter();
+  requestsTotalTime = createTimeCounter();
+}
+
+
 
 const agent = new Agent({
   connections: max_connections,      // Increase connections
