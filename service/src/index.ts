@@ -96,15 +96,16 @@ const parser_logic = async () => {
   const createDate: Date =  new Date();
   console.log(id + " has " + n_attach + " attachments");
   const msg = {data: id, time: createDate.toISOString()};
-  await publisher.set(id, 3 + n_attach);
-  if(n_attach > 0) {
-    for (let i = 0; i < n_attach; i++) {
-      fireAndForget(msg, virusScanner);
+  publisher.set(id, 3 + n_attach).then(() => {
+    if(n_attach > 0) {
+      for (let i = 0; i < n_attach; i++) {
+        fireAndForget(msg, virusScanner);
+      }
     }
-  }
-  fireAndForget(msg, headerAnalyzer);
-  fireAndForget(msg, linkAnalyzer);
-  fireAndForget(msg, textAnalyzer);
+    fireAndForget(msg, headerAnalyzer);
+    fireAndForget(msg, linkAnalyzer);
+    fireAndForget(msg, textAnalyzer);
+  });
 };
 
 const virus_scanner_logic = (msg: any) => {
