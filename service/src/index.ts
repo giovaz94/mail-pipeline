@@ -140,7 +140,7 @@ const common_logic = (msg: any) => {
 const message_analyzer_logic = (msg: any) => {
   publisher.decr(msg.data).then(res => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
-    if (res <= 0) {
+    if (res == 0) {
       completedMessages.inc();
       const now = new Date();
       const time = new Date(msg.time);
