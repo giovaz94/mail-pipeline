@@ -22,7 +22,6 @@ const lostMessage = createLostMessageCounter(serviceName);
 const globalLostMessage = createLostMessageCounter("global");
 const incomingMessages = createIncomingMessageCounter(serviceName);
 
-
 let completedMessages: Counter<string>
 let requestsTotalTime: Counter<string>
 
@@ -30,8 +29,6 @@ if (serviceName === "message-analyzer") {
   completedMessages = createCompleteCounter();
   requestsTotalTime = createTimeCounter();
 }
-
-
 
 const agent = new Agent({
   connections: max_connections,      // Increase connections
@@ -43,7 +40,7 @@ if (process.env.MCL === undefined) throw new Error("The MCL for the following se
 const mcl: number = parseInt(process.env.MCL as string, 10);
 const requestQueue: Task[] = [];
 
-async function fireAndForget(msg: any, url: string) {
+async function fireAndForget(msg: any, requestCreated: Request, url: string) {
   try {
     const res = await request(url, {
       method: 'POST',
@@ -62,6 +59,7 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   const msg = req.body;
   incomingMessages.inc();
   if (requestQueue.length >= max_queue_size) {
+    res.sendStatus(500);
     console.log("----message loss----");
     if (serviceName === "parser") globalLostMessage.inc();
     else {
@@ -70,22 +68,22 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
       });
     }
     lostMessage.inc(); 
-    res.sendStatus(500);
     return;
   }
-  const ready = new Promise<any>((resolve) => {
-    const task: Task = {req, res, next, resolve: (body: any) => resolve(body)};
+  res.sendStatus(200);
+  const ready = new Promise<Request>((resolve) => {
+    const task: Task = {req, res, next, resolve: (body: Request) => resolve(body)};
     requestQueue.push(task);
   });
 
-  ready.then((body) => {
+  ready.then((request) => {
     next();
-    if (serviceName === "parser") parser_logic();
-    if (serviceName === "virus-scanner") virus_scanner_logic(body);
-    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(body);
-    if (serviceName === "message-analyzer") message_analyzer_logic(body);
+    if (serviceName === "parser") parser_logic(request);
+    if (serviceName === "virus-scanner") virus_scanner_logic(request);
+    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(request);
+    if (serviceName === "message-analyzer") message_analyzer_logic(request);
   });
-  res.sendStatus(200);
+  return
 }
 
 const app = express();
@@ -94,9 +92,13 @@ const port = process.env.PORT ?? "9001";
 app.use(express.json()); 
 app.get("/metrics", prometheusMetrics);
 if (mcl > 0) app.post("/request", rateLimitMiddleware);
-else app.post("/request", (req: Request, res: Response) => common_logic(req.body));
+else app.post("/request", (req: Request, res: Response) => {
+  res.sendStatus(200)
+  common_logic(req.body)
 
-const parser_logic = async () => {
+});
+
+const parser_logic = async (request: any) => {
   const virusScanner = process.env.VIRUS_SCANNER || "undefinedService";
   const headerAnalyzer = process.env.HEADER_ANALYZER || "undefinedService";
   const linkAnalyzer = process.env.LINK_ANALYZER || "undefinedService";
@@ -109,33 +111,36 @@ const parser_logic = async () => {
   publisher.set(id, 3 + n_attach).then(() => {
     if(n_attach > 0) {
       for (let i = 0; i < n_attach; i++) {
-        fireAndForget(msg, virusScanner);
+        fireAndForget(msg, request, virusScanner);
       }
     }
-    fireAndForget(msg, headerAnalyzer);
-    fireAndForget(msg, linkAnalyzer);
-    fireAndForget(msg, textAnalyzer);
+    fireAndForget(msg, request, headerAnalyzer);
+    fireAndForget(msg, request, linkAnalyzer);
+    fireAndForget(msg, request, textAnalyzer);
   });
 };
 
-const virus_scanner_logic = (msg: any) => {
+const virus_scanner_logic = (request: any) => {
+  let msg = request.body
   const isVirus = Math.floor(Math.random() * 4) === 0;
   if (isVirus) console.log(msg.data + " has virus");
   else console.log(msg.data + ' is virus free');
   const target = isVirus ? process.env.MESSAGE_ANALYZER || "undefinedService" : process.env.ATTACHMENT_MANAGER || "undefinedService";
   console.log(`Sending to ${target}`)
-  fireAndForget(msg, target);
+  fireAndForget(msg, request, target);
 }
 
-const common_logic = (msg: any) => {
+const common_logic = (request: any) => {
   let target;
+  let msg = request.body
   if (serviceName === "attachment-manager") target = process.env.IMAGE_ANALYZER || "undefinedService";
   else target =  process.env.MESSAGE_ANALYZER || "undefinedService";
   console.log(`sending message to ${target}`);
-  fireAndForget(msg, target);
+  fireAndForget(msg, request, target);
 }
 
-const message_analyzer_logic = (msg: any) => {
+const message_analyzer_logic = (request: any) => {
+  let msg = request.body
   publisher.decr(msg.data).then(res => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
     if (res <= 0) {
@@ -153,7 +158,7 @@ const message_analyzer_logic = (msg: any) => {
 if (mcl > 0) {
   setInterval(() => {
     const task = requestQueue.shift();
-    task?.resolve(task.req.body);
+    task?.resolve(task.req);
   }, 1000 / mcl);
 }
 
