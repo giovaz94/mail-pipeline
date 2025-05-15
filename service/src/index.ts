@@ -105,9 +105,9 @@ const parser_logic = async () => {
   const textAnalyzer = process.env.TEXT_ANALYZER || "undefinedService";
   const id = v4();
   const n_attach = Math.floor(Math.random() * 5);
-  const createDate: Date =  new Date();
+  const createDate: number =  Date.now();
   console.log(id + " has " + n_attach + " attachments");
-  const msg = {data: id, time: createDate.getMilliseconds()};
+  const msg = {data: id, time: createDate};
   publisher.set(id, 3 + n_attach).then(() => {
     if(n_attach > 0) {
       for (let i = 0; i < n_attach; i++) {
@@ -142,8 +142,8 @@ const message_analyzer_logic = (msg: any) => {
     console.log(`Message ${msg.data} has ${res} items to analyze`)
     if (res == 0) {
       completedMessages.inc();
-      const now = new Date();
-      const diff = now.getMilliseconds() - parseInt(msg.time);
+      const now = Date.now();
+      const diff = now - parseInt(msg.time);
       console.log(msg.data + " completed in " + diff);
       requestsTotalTime.inc(diff);
       publisher.del(msg.data);
