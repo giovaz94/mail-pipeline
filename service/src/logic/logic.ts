@@ -15,7 +15,7 @@ export type ServiceConfiguration = {
 }
 
 export type Task = {
-    resolve: (body: Request) => void;
+    resolve: () => void;
     req: Request;
     res: Response;
     next: NextFunction;

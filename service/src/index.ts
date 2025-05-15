@@ -71,17 +71,17 @@ function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     return;
   }
   res.sendStatus(200);
-  const ready = new Promise<Request>((resolve) => {
-    const task: Task = {req, res, next, resolve: (body: Request) => resolve(body)};
+  const ready = new Promise<void>((resolve) => {
+    const task: Task = {req, res, next, resolve: () => resolve()};
     requestQueue.push(task);
   });
 
-  ready.then((request) => {
+  ready.then(() => {
     next();
     if (serviceName === "parser") parser_logic();
-    if (serviceName === "virus-scanner") virus_scanner_logic(request.body);
-    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(request.body);
-    if (serviceName === "message-analyzer") message_analyzer_logic(request.body);
+    if (serviceName === "virus-scanner") virus_scanner_logic(msg);
+    if (serviceName === "attachment-manager" || serviceName === "image-analyzer") common_logic(msg);
+    if (serviceName === "message-analyzer") message_analyzer_logic(msg);
   });
   return
 }
@@ -155,7 +155,7 @@ const message_analyzer_logic = (msg: any) => {
 if (mcl > 0) {
   setInterval(() => {
     const task = requestQueue.shift();
-    task?.resolve(task.req);
+    task?.resolve();
   }, 1000 / mcl);
 }
 
