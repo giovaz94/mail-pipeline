@@ -16,7 +16,7 @@ jobs:
             image: giovaz94/mail-pipeline-general
           - dockerfile: ./global-scaler/Dockerfile
             context: ./global-scaler
-            image: giovaz94/mail-pipeline-gs
+            image: giovaz94/mail-pipeline-gs-new
           - dockerfile: ./entrypoint/Dockerfile
             context: ./entrypoint
             image: giovaz94/mail-pipeline-ep
