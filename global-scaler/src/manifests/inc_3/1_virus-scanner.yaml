@@ -8,15 +8,23 @@ spec:
   #nodeName: testing-cluster-pool-b7x6c
   containers:
   - name: virus-scanner
-    image: giovaz94/virus-scanner-service
+    image: giovaz94/mail-pipeline-general
     env:
       - name: MCL
         value: "120"
       - name: REDIS_HOST
         value: "redis-service"
-      - name: LIMIT
-        value: "800"
-      - name: DELAY
-        value: "750"
-      - name: BATCH
-        value: "120"
+      - name: SERVICE_NAME
+        value: "virus-scanner"
+      - name: PORT
+        value: "80"
+      - name: MAX_SIZE
+        value: "15000"
+      - name: MESSAGE_ANALYZER
+        value: "http://message-analyzer-service/request"
+      - name: ATTACHMENT_MANAGER
+        value: "http://attachment-manager-service/request"
+      - name: MAX_CONNECTIONS
+        value: "70"
+      - name: PIPELINE_COUNT
+        value: "1"
