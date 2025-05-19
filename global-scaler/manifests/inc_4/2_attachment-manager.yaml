@@ -8,7 +8,7 @@ spec:
   #nodeName: testing-cluster-pool-b7x6u
   containers:
   - name: attachment-manager
-    image: giovaz94/attachment-manager-service
+    image: giovaz94/mail-pipeline-general
     env:
       - name: MCL
         value: "231"
