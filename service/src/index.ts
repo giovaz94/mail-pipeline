@@ -105,19 +105,29 @@ const parser_logic = async () => {
   const textAnalyzer = process.env.TEXT_ANALYZER || "undefinedService";
   const id = v4();
   const n_attach = Math.floor(Math.random() * 5);
-  const createDate: number =  Date.now();
+  
+  const pipeline = publisher.pipeline();
+  pipeline.set(id, 3 + n_attach);
+  pipeline.time(); 
+  
+  const results = await pipeline.exec();
+  if (!results || !results[1] || !results[1][1]) {
+    throw new Error("Failed to retrieve Redis timestamp from pipeline results");
+  }
+  const redisTime = results[1][1] as [string, string];
+  const createTime = parseInt(redisTime[0]) * 1000 + Math.floor(parseInt(redisTime[1]) / 1000);
+  
   console.log(id + " has " + n_attach + " attachments");
-  const msg = {data: id, time: createDate};
-  publisher.set(id, 3 + n_attach).then(() => {
-    if(n_attach > 0) {
-      for (let i = 0; i < n_attach; i++) {
-        fireAndForget(msg, virusScanner);
-      }
+  const msg = {data: id, time: createTime};
+  
+  if(n_attach > 0) {
+    for (let i = 0; i < n_attach; i++) {
+      fireAndForget(msg, virusScanner);
     }
-    fireAndForget(msg, headerAnalyzer);
-    fireAndForget(msg, linkAnalyzer);
-    fireAndForget(msg, textAnalyzer);
-  });
+  }
+  fireAndForget(msg, headerAnalyzer);
+  fireAndForget(msg, linkAnalyzer);
+  fireAndForget(msg, textAnalyzer);
 };
 
 const virus_scanner_logic = (msg: any) => {
@@ -137,19 +147,23 @@ const common_logic = (msg: any) => {
   fireAndForget(msg, target);
 }
 
-const message_analyzer_logic = (msg: any) => {
-  publisher.decr(msg.data).then(res => {
-    console.log(`Message ${msg.data} has ${res} items to analyze`)
-    if (res == 0) {
-      completedMessages.inc();
-      const now = Date.now();
-      const diff = now - parseInt(msg.time);
-      console.log(msg.data + " completed in " + diff);
-      requestsTotalTime.inc(diff);
-      publisher.del(msg.data);
-    }
-  });
-}
+const message_analyzer_logic = async (msg: any) => {
+  const decrementResult = await publisher.decr(msg.data);
+  console.log(`Message ${msg.data} has ${decrementResult} items to analyze`);
+  
+  if (decrementResult == 0) {
+    completedMessages.inc();
+    
+    
+    const redisTimeResult = await publisher.time();
+    const now = parseInt(redisTimeResult[0].toString()) * 1000 + Math.floor(parseInt(redisTimeResult[1].toString()) / 1000);
+    
+    const diff = now - parseInt(msg.time);
+    console.log(msg.data + " completed in " + diff);
+    requestsTotalTime.inc(diff);
+    publisher.del(msg.data);
+  }
+};
 
 if (mcl > 0) {
   setInterval(() => {
