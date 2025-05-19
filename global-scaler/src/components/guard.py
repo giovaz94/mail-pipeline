@@ -29,16 +29,15 @@ class Guard:
         self.mixer = mixer
 
         prometheus_service_address = os.environ.get("PROMETHEUS_SERVICE_ADDRESS", "localhost")
-        prometheus_service_port = os.environ.get("PROMETHEUS_SERVICE_PORT", "50233")
+        prometheus_service_port = os.environ.get("PROMETHEUS_SERVICE_PORT", "59118")
         prometheus_url = f"http://{prometheus_service_address}:{prometheus_service_port}"
         self.prometheus_instance = PrometheusConnect(url=prometheus_url)
 
-        self.proactiveness = os.environ.get("PROACTIVE", "false").lower() == 'true' #change to an env variable
+        self.proactiveness = os.environ.get("PROACTIVE", "false").lower() == 'true'
         self.proactive_reactive = self.proactiveness and os.environ.get("PROACTIVE_REACTIVE", "false").lower() == 'true' 
         self.predictions = predictions
-        #self.monitor_only = os.environ.get("MONITOR_ONLY", "false").lower() == 'true'
-        self.monitor_only = True
-
+        self.monitor_only = os.environ.get("MONITOR_ONLY", "false").lower() == 'true'
+    
     def start(self) -> None:
         """
         Start the guard process.
