@@ -8,15 +8,28 @@ spec:
   #nodeName:  testing-cluster-pool-b7x6c
   containers:
   - name: parser
-    image: giovaz94/parser-service
+    image: giovaz94/mail-pipeline-general
     env:
-      - name: REDIS_HOST
-        value: "redis-service"
       - name: MCL
         value: "110"
-      - name: LIMIT
-        value: "800"
-      - name: DELAY
-        value: "750"
-      - name: BATCH
-        value: "110"
+      - name: REDIS_HOST
+        value: "redis-service"
+      - name: SERVICE_NAME
+        value: "parser"
+      - name: PORT
+        value: "80"
+      - name: MAX_SIZE
+        value: "15000"
+      - name: VIRUS_SCANNER
+        value: "http://virus-scanner-service/request"
+      - name: HEADER_ANALYZER
+        value: "http://header-analyzer-service/request"
+      - name: TEXT_ANALYZER
+        value: "http://text-analyzer-service/request"
+      - name: LINK_ANALYZER
+        value: "http://link-analyzer-service/request"
+      - name: MAX_CONNECTIONS
+        value: "70"
+      - name: PIPELINE_COUNT
+        value: "1"
+
