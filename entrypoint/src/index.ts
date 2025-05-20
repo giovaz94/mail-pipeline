@@ -1,6 +1,7 @@
 import express, {Request, Response , Application } from 'express';
 import { Agent, request } from 'undici';
-import { Counter, Registry } from "prom-client";
+import * as prometheus from "prom-client";
+
 
 const app: Application = express();
 const port: string | 8010 = process.env.PORT || 8010;
@@ -10,12 +11,12 @@ const agent = new Agent({
     pipelining: 0,         // Keep pipelining off if server doesn't support it
   });
 
-const incoming_requests = new Counter({
+const incoming_requests = new prometheus.Counter({
     name: 'http_incoming_requests',
     help: 'Total number of Incoming HTTP requests',
 });
 
-const message_loss = new Counter({
+const message_loss = new prometheus.Counter({
     name: `message_lost_global_counter`,
     help: "Total number of messages that failed to be delivered",
 });
@@ -155,6 +156,18 @@ const workload = [
 //     45, 132, 130, 47, 92, 95, 150, 157, 255, 400,
 //     430, 440, 440, 445, 455, 475, 457, 447, 447, 420
 // ];
+
+app.get('/metrics', (req, res) => {
+    prometheus.register.metrics()
+        .then(metrics => {
+            res.set('Content-Type', prometheus.contentType);
+            res.end(metrics);
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            res.status(500).end("Internal Server Error");
+        });
+})
 
 var stop = false;
 app.post('/start', (req: Request, res: Response) => {
