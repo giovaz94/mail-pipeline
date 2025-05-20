@@ -14,7 +14,7 @@ spec:
       serviceAccountName: scaler-service-account
       containers:
         - name: gs-algorithm
-          image: giovaz94/gs-new-empip
+          image: giovaz94/mail-pipeline-gs-new
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
