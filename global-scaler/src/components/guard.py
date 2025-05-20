@@ -72,7 +72,7 @@ class Guard:
         Check the conditions of the system and eventually scale it.
         """
         print("Monitoring the system...")
-        init_val = self._execute_prometheus_query("sum(http_requests_total_parser_counter)")
+        init_val = self._execute_prometheus_query("sum(increase(http_requests_total_parser_counter[10s]))")
         sl = 1
         iter = 0
         last_pred_conf = []
