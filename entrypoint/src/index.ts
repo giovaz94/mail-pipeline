@@ -1,5 +1,6 @@
 import express, {Request, Response , Application } from 'express';
 import { Agent, request } from 'undici';
+import { Counter, Registry } from "prom-client";
 
 const app: Application = express();
 const port: string | 8010 = process.env.PORT || 8010;
@@ -8,6 +9,17 @@ const agent = new Agent({
     connections: 10,      // Increase connections
     pipelining: 0,         // Keep pipelining off if server doesn't support it
   });
+
+const incoming_requests = new Counter({
+    name: 'http_incoming_requests',
+    help: 'Total number of Incoming HTTP requests',
+});
+
+const message_loss = new Counter({
+    name: `message_lost_global_counter`,
+    help: "Total number of messages that failed to be delivered",
+});
+
 
 //enron standard
 const workload = [
@@ -156,7 +168,11 @@ app.post('/start', (req: Request, res: Response) => {
                 request(url, { 
                     method: 'POST',
                     dispatcher: agent
-                  }).catch(err => console.log(err.message));
+                  }).catch(err => {
+                    message_loss.inc()
+                    console.log(err.message)
+                });
+                  incoming_requests.inc();
             }
             await new Promise(resolve => setTimeout(resolve, 1000));   
         }

@@ -72,7 +72,7 @@ class Guard:
         Check the conditions of the system and eventually scale it.
         """
         print("Monitoring the system...")
-        init_val = self._execute_prometheus_query("sum(increase(http_requests_total_parser_counter[10s]))")
+        init_val = self._execute_prometheus_query("sum(increase(http_incoming_requests[10s]))")
         sl = 1
         iter = 0
         last_pred_conf = []
@@ -88,7 +88,7 @@ class Guard:
         while self.running:
             start = time.time()
         
-            tot = self._execute_prometheus_query("sum(increase(http_requests_total_parser_counter[10s]))")
+            tot = self._execute_prometheus_query("sum(increase(http_incoming_requests[10s]))")
             completed = self._execute_prometheus_query("sum(increase(http_requests_total_global[10s]))")
             latency = self._execute_prometheus_query("sum(increase(http_requests_total_time[10s]))")
             avg_lat = latency/(completed if completed > 0 else 1)
