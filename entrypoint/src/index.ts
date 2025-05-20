@@ -8,7 +8,7 @@ const port: string | 8010 = process.env.PORT || 8010;
 const url: string = process.env.ENDPOINT || "http://100.66.83.79:31000/request";
 const agent = new Agent({
     connections: 10,      // Increase connections
-    pipelining: 0,         // Keep pipelining off if server doesn't support it
+    pipelining: 0,        // Keep pipelining off if server doesn't support it
   });
 
 const incoming_requests = new prometheus.Counter({
@@ -178,6 +178,7 @@ app.post('/start', (req: Request, res: Response) => {
             const r = workload[index++];
             console.log(`Sending ${r} requests per second`);
             for (let i = 0; i < r; i++) {
+                incoming_requests.inc();
                 request(url, { 
                     method: 'POST',
                     dispatcher: agent
@@ -185,7 +186,7 @@ app.post('/start', (req: Request, res: Response) => {
                     message_loss.inc()
                     console.log(err.message)
                 });
-                  incoming_requests.inc();
+                
             }
             await new Promise(resolve => setTimeout(resolve, 1000));   
         }
