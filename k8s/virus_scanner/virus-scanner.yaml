@@ -28,7 +28,7 @@ spec:
             - name: PORT
               value: "80"
             - name: MAX_SIZE
-              value: "15000"
+              value: "800"
             - name: MESSAGE_ANALYZER
               value: "http://message-analyzer-service/request"
             - name: ATTACHMENT_MANAGER

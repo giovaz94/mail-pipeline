@@ -28,7 +28,7 @@ spec:
             - name: PORT
               value: "80"
             - name: MAX_SIZE
-              value: "15000"
+              value: "800"
             - name: IMAGE_ANALYZER
               value: "http://image-analyzer-service/request"
             - name: MAX_CONNECTIONS

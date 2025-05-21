@@ -39,7 +39,7 @@ spec:
             - name: MANIFEST_NAME
               value: "parser"
             - name: METRIC_NAME
-              value: "http_requests_total_parser_counter"
+              value: "http_incoming_requests"
             - name: SERVICE_PORT
               value: "7001"
             
