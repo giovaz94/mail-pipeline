@@ -169,7 +169,7 @@ if (mcl > 0) {
   setInterval(() => {
     const task = requestQueue.shift();
     task?.resolve();
-  }, 800 / mcl);
+  }, 1000 / mcl);
 }
 
 
