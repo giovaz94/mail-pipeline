@@ -106,16 +106,25 @@ const parser_logic = async () => {
   const id = v4();
   const n_attach = Math.floor(Math.random() * 5);
   
-  const pipeline = publisher.pipeline();
-  pipeline.set(id, 3 + n_attach);
-  pipeline.time(); 
+  // const pipeline = publisher.pipeline();
+  // pipeline.set(id, 3 + n_attach);
+  // pipeline.time(); 
+  // const results = await pipeline.exec();
+
+  // if (!results || !results[1] || !results[1][1]) {
+  //   throw new Error("Failed to retrieve Redis timestamp from pipeline results");
+  // }
+
+  // const redisTime = results[1][1] as [string, string];
+  // const createTime = parseInt(redisTime[0]) * 1000 + Math.floor(parseInt(redisTime[1]) / 1000);
+
+  const results = await publisher.set(id, 3 + n_attach);
   
-  const results = await pipeline.exec();
-  if (!results || !results[1] || !results[1][1]) {
+  if (!results) {
     throw new Error("Failed to retrieve Redis timestamp from pipeline results");
   }
-  const redisTime = results[1][1] as [string, string];
-  const createTime = parseInt(redisTime[0]) * 1000 + Math.floor(parseInt(redisTime[1]) / 1000);
+
+  const createTime = Date.now();
   
   console.log(id + " has " + n_attach + " attachments");
   const msg = {data: id, time: createTime};
@@ -155,8 +164,8 @@ const message_analyzer_logic = async (msg: any) => {
     completedMessages.inc();
     
     
-    const redisTimeResult = await publisher.time();
-    const now = parseInt(redisTimeResult[0].toString()) * 1000 + Math.floor(parseInt(redisTimeResult[1].toString()) / 1000);
+    // const redisTimeResult = await publisher.time();
+    const now = Date.now(); //parseInt(redisTimeResult[0].toString()) * 1000 + Math.floor(parseInt(redisTimeResult[1].toString()) / 1000);
     
     const diff = now - parseInt(msg.time);
     console.log(msg.data + " completed in " + diff);
